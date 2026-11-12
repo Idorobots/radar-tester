@@ -32,10 +32,6 @@ const dom = {
   mapScale: el<HTMLElement>('mapScale'),
   mapEmpty: el<HTMLDivElement>('mapEmpty'),
   chartDistance: el<HTMLCanvasElement>('chartDistance'),
-  targetCountBadge: el<HTMLSpanElement>('targetCountBadge'),
-  roTracked: el<HTMLElement>('roTracked'),
-  roMoving: el<HTMLElement>('roMoving'),
-  roStill: el<HTMLElement>('roStill'),
   hz: el<HTMLElement>('hz'),
   frames: el<HTMLElement>('frames'),
   badFooters: el<HTMLElement>('badFooters'),
@@ -315,10 +311,6 @@ function targetAngle(target: RadarTarget): number {
 }
 
 function updateTargetReadouts(): void {
-  let tracked = 0;
-  let moving = 0;
-  let still = 0;
-
   for (let i = 0; i < targetDom.length; i++) {
     const ui = targetDom[i];
     const target = lastFrame?.targets[i];
@@ -334,11 +326,8 @@ function updateTargetReadouts(): void {
       continue;
     }
 
-    tracked++;
-    const isMoving = target.speedCms !== 0;
-    if (isMoving) moving++;
-    else still++;
     const distance = Math.hypot(target.xMm, target.yMm);
+    const isMoving = target.speedCms !== 0;
     ui.x.textContent = signedM(target.xMm);
     ui.y.textContent = signedM(target.yMm);
     ui.distance.textContent = `${(distance / 1000).toFixed(2)} m`;
@@ -350,15 +339,6 @@ function updateTargetReadouts(): void {
     else ui.direction.textContent = 'stationary';
     setBadge(ui.badge, isMoving ? 'moving' : 'still', isMoving ? 'badge-ok' : 'badge-warn');
   }
-
-  dom.roTracked.textContent = String(tracked);
-  dom.roMoving.textContent = String(moving);
-  dom.roStill.textContent = String(still);
-  setBadge(
-    dom.targetCountBadge,
-    `${tracked} / 3`,
-    tracked > 0 ? 'badge-ok' : lastFrame ? 'badge-off' : 'badge-off',
-  );
 }
 
 function updateHealth(hz: number): void {
@@ -760,6 +740,7 @@ if (!window.isSecureContext) {
   dom.btnConnect.disabled = true;
   dom.btnConnectAll.disabled = true;
   dom.btnBle.disabled = true;
+  dom.btnBle.title = 'Web Bluetooth requires a secure context (localhost or HTTPS).';
 } else {
   if (!serialSupported()) {
     showBanner('Web Serial is not available in this browser. Use Chrome, Edge or Opera on desktop — the simulator still works.');
@@ -768,11 +749,17 @@ if (!window.isSecureContext) {
   }
   if (!bleSupported()) {
     dom.btnBle.disabled = true;
+    dom.btnBle.title =
+      'Web Bluetooth is not available in this browser. Use Chrome/Edge on desktop or Android over localhost/HTTPS; Linux Chromium may need --enable-blink-features=WebBluetooth.';
   }
 }
 
 if (!serialSupported()) dom.btnConnect.disabled = true;
-if (!bleSupported()) dom.btnBle.disabled = true;
+if (!bleSupported()) {
+  dom.btnBle.disabled = true;
+  dom.btnBle.title =
+    'Web Bluetooth is not available in this browser. Use Chrome/Edge on desktop or Android over localhost/HTTPS; Linux Chromium may need --enable-blink-features=WebBluetooth.';
+}
 
 commandClient = new CommandClient(async (data: Uint8Array) => {
   if (source === 'serial') await serial.write(data);

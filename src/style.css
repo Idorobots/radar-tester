@@ -303,7 +303,7 @@ select:disabled {
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   overflow-y: auto;
   min-height: 0;
   padding-right: 2px;
@@ -399,49 +399,22 @@ select:disabled {
 
 /* ---------- targets ---------- */
 
-.summary-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.summary {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 8px 10px;
-  background: var(--panel-2);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-}
-
-.summary .label {
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--muted);
-}
-
-.summary .value b {
-  font-size: 20px;
-  font-weight: 650;
-}
-
 .target-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
+  flex: 0 0 auto;
 }
 
 .target-card {
-  padding: 12px 14px 12px;
+  padding: 8px 11px;
 }
 
 .target-head {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 9px;
+  margin-bottom: 6px;
 }
 
 .target-head h3 {
@@ -478,7 +451,7 @@ select:disabled {
 .target-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  gap: 4px;
   margin: 0;
 }
 
@@ -486,7 +459,7 @@ select:disabled {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  padding: 5px 8px;
+  padding: 3px 7px;
   background: var(--panel-2);
   border: 1px solid var(--border);
   border-radius: 7px;
@@ -508,7 +481,7 @@ select:disabled {
 }
 
 .target-foot {
-  margin-top: 8px;
+  margin-top: 4px;
   font-size: 11px;
   color: var(--faint);
   min-height: 16px;
@@ -518,7 +491,20 @@ select:disabled {
 
 .chart-wrap {
   position: relative;
-  height: 170px;
+  height: 160px;
+}
+
+.chart-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.chart-card .chart-wrap {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 96px;
 }
 
 /* ---------- map ---------- */
@@ -804,13 +790,30 @@ details.card summary .hint-inline {
 
 /* ---------- responsive ---------- */
 
+@media (max-width: 1366px) {
+  .topbar {
+    padding: 10px 16px;
+    gap: 10px;
+  }
+
+  .topbar-actions {
+    gap: 6px;
+  }
+
+  .btn {
+    padding: 6px 10px;
+    font-size: 12.5px;
+  }
+
+  .pill {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+}
+
 @media (max-width: 1200px) {
   .layout {
     grid-template-columns: 280px minmax(0, 1fr) 280px;
-  }
-
-  .target-grid {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -837,6 +840,14 @@ details.card summary .hint-inline {
 
   .target-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .chart-card {
+    flex: 0 0 auto;
+  }
+
+  .chart-card .chart-wrap {
+    height: 180px;
   }
 
   .map-head {
