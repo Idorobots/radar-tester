@@ -15,6 +15,7 @@ export class DistanceHistory {
   private readonly data: Sample[][] = [[], [], []];
   private lastUpdate = 0;
   private lastT = 0;
+  private windowStart = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.chart = new Chart(canvas, {
@@ -57,6 +58,7 @@ export class DistanceHistory {
             titleColor: '#e6eaf2',
             bodyColor: '#8a94a6',
             callbacks: {
+              title: (items) => (items.length > 0 ? `${Math.round(Number(items[0].parsed.x))}s` : ''),
               label: (context) => `${context.dataset.label}: ${Number(context.parsed.y).toFixed(2)} m`,
             },
           },
@@ -68,7 +70,14 @@ export class DistanceHistory {
             max: WINDOW_S,
             grid: { color: '#1a2130' },
             border: { color: '#2a3344' },
-            ticks: { color: '#5b6478', font: { size: 9 }, maxTicksLimit: 7, callback: (value) => `${value}s` },
+            ticks: {
+              color: '#5b6478',
+              font: { size: 9 },
+              maxTicksLimit: 7,
+              precision: 0,
+              stepSize: 10,
+              callback: (value) => `${Math.round(Number(value))}s`,
+            },
           },
           y: {
             beginAtZero: true,
@@ -84,12 +93,28 @@ export class DistanceHistory {
 
   push(frame: RadarFrame, sessionT: number): void {
     this.lastT = sessionT;
+    // Keep the x axis anchored to "now" at 60 s so labels stay clean
+    // (0s … 60s) even though samples are captured in session time.
+    const windowStart = Math.max(0, sessionT - WINDOW_S);
+    const delta = windowStart - this.windowStart;
+    if (delta !== 0) {
+      this.windowStart = windowStart;
+      for (const samples of this.data) {
+        for (const sample of samples) sample.x -= delta;
+      }
+    }
+
     for (let i = 0; i < frame.targets.length; i++) {
       const target = frame.targets[i];
       if (!target.active) continue;
-      const samples = this.data[i];
-      samples.push({ x: sessionT, y: Math.hypot(target.xMm, target.yMm) / 1000 });
-      while (samples.length > MAX_POINTS || (samples.length > 0 && samples[0].x < sessionT - WINDOW_S)) {
+      this.data[i].push({
+        x: sessionT - this.windowStart,
+        y: Math.hypot(target.xMm, target.yMm) / 1000,
+      });
+    }
+
+    for (const samples of this.data) {
+      while (samples.length > MAX_POINTS || (samples.length > 0 && samples[0].x < 0)) {
         samples.shift();
       }
     }
@@ -98,9 +123,8 @@ export class DistanceHistory {
   update(force = false): void {
     if (!force && this.lastT - this.lastUpdate < 0.25) return;
     this.lastUpdate = this.lastT;
-    const min = Math.max(0, this.lastT - WINDOW_S);
-    this.chart.options.scales!.x!.min = min;
-    this.chart.options.scales!.x!.max = Math.max(WINDOW_S, this.lastT);
+    this.chart.options.scales!.x!.min = 0;
+    this.chart.options.scales!.x!.max = WINDOW_S;
     this.chart.update('none');
   }
 
@@ -110,6 +134,7 @@ export class DistanceHistory {
     this.data[2].length = 0;
     this.lastT = 0;
     this.lastUpdate = 0;
+    this.windowStart = 0;
     this.chart.options.scales!.x!.min = 0;
     this.chart.options.scales!.x!.max = WINDOW_S;
     this.chart.update('none');
